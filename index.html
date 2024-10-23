@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectacular Planetary Journey</title>
+    <link rel="icon" type="images/x-icon"
+    href="https://cdn.icon-icons.com/icons2/32/PNG/256/globe_earth_planet_2767.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Space+Mono&display=swap');
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow-x: hidden;
+            font-family: 'Space Mono', monospace;
+            background-color: #000;
+            color: #fff;
+        }
+
+        .space {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background-color: #fff;
+            border-radius: 50%;
+            animation: twinkle 4s infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); filter: blur(1px); }
+            50% { opacity: 1; transform: scale(1.2); filter: blur(0); }
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background-color: #fff;
+            animation: shoot 5s linear infinite;
+        }
+
+        @keyframes shoot {
+            0% { transform: translateX(-100%) translateY(-100%); opacity: 1; }
+            70% { opacity: 1; }
+            100% { transform: translateX(200%) translateY(200%); opacity: 0; }
+        }
+
+        .planet-container {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+            position: relative;
+        }
+
+        .planet {
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            position: relative;
+            transform: translateZ(-500px) scale(0.5);
+            opacity: 0.3;
+            transition: all 1.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            box-shadow: 0 0 50px rgba(255, 255, 255, 0.3);
+            animation: rotate 30s infinite linear;
+            cursor: pointer;
+        }
+
+        .planet::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border-radius: 50%;
+            background: inherit;
+            filter: blur(20px);
+            opacity: 0.7;
+            z-index: -1;
+        }
+
+        .planet.active {
+            transform: translateZ(0) scale(1);
+            opacity: 1;
+        }
+
+        @keyframes rotate {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        .planet-info {
+            position: absolute;
+            bottom: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 15px;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            width: 350px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .planet.active .planet-info {
+            opacity: 1;
+            transform: translateX(-50%) translateY(-30px);
+        }
+
+        .planet-info h2 {
+            margin: 0 0 10px;
+            font-size: 28px;
+            font-family: 'Orbitron', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #f0f0f0;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .planet-info p {
+            margin: 0 0 10px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #d0d0d0;
+        }
+
+        .planet-info .fact {
+            font-style: italic;
+            font-size: 12px;
+            color: #a0a0a0;
+        }
+
+        #mercury { background: linear-gradient(45deg, #727272, #a8a8a8); }
+        #venus { background: linear-gradient(45deg, #e6b35a, #ffd480); }
+        #earth { 
+            background: linear-gradient(45deg, #4ca6ff, #68c3d4);
+            position: relative;
+        }
+        #earth::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background:  url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAACXBIWXMAAAsTAAALEwEAmpwYAAAF8WlUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4gPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxNDUgNzkuMTYzNDk5LCAyMDE4LzA4LzEzLTE2OjQwOjIyICAgICAgICAiPiA8cmRmOlJERiB4bWxuczpyZGY9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkvMDIvMjItcmRmLXN5bnRheC1ucyMiPiA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIiB4bWxuczp4bXA9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC8iIHhtbG5zOmRjPSJodHRwOi8vcHVybC5vcmcvZGMvZWxlbWVudHMvMS4xLyIgeG1sbnM6cGhvdG9zaG9wPSJodHRwOi8vbnMuYWRvYmUuY29tL3Bob3Rvc2hvcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RFdnQ9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZUV2ZW50IyIgeG1wOkNyZWF0b3JUb29sPSJBZG9iZSBQaG90b3Nob3AgQ0MgMjAxOSAoV2luZG93cykiIHhtcDpDcmVhdGVEYXRlPSIyMDIzLTEwLTIzVDEwOjU1OjIzLTA3OjAwIiB4bXA6TW9kaWZ5RGF0ZT0iMjAyMy0xMC0yM1QxMDo1NjoxMy0wNzowMCIgeG1wOk1ldGFkYXRhRGF0ZT0iMjAyMy0xMC0yM1QxMDo1NjoxMy0wNzowMCIgZGM6Zm9ybWF0PSJpbWFnZS9wbmciIHBob3Rvc2hvcDpDb2xvck1vZGU9IjMiIHBob3Rvc2hvcDpJQ0NQcm9maWxlPSJzUkdCIElFQzYxOTY2LTIuMSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpmYmMzMWNhOS01OWE4LTM5NDQtOTIzZC1mNmM1MDZlZWM5YmQiIHhtcE1NOkRvY3VtZW50SUQ9ImFkb2JlOmRvY2lkOnBob3Rvc2hvcDo5NDZmMzA1ZC0xOTJmLWUwNDAtOGU1OS0wNzJmYjk3MjQ5YWMiIHhtcE1NOk9yaWdpbmFsRG9jdW1lbnRJRD0ieG1wLmRpZDo3NGY0ZTM4ZS03NGJjLTk5NDYtYWJkNC1mNzc1NTE2ZGU1Y2UiPiA8eG1wTU06SGlzdG9yeT4gPHJkZjpTZXE+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJjcmVhdGVkIiBzdEV2dDppbnN0YW5jZUlEPSJ4bXAuaWlkOjc0ZjRlMzhlLTc0YmMtOTk0Ni1hYmQ0LWY3NzU1MTZkZTVjZSIgc3RFdnQ6d2hlbj0iMjAyMy0xMC0yM1QxMDo1NToyMy0wNzowMCIgc3RFdnQ6c29mdHdhcmVBZ2VudD0iQWRvYmUgUGhvdG9zaG9wIENDIDIwMTkgKFdpbmRvd3MpIi8+IDxyZGY6bGkgc3RFdnQ6YWN0aW9uPSJzYXZlZCIgc3RFdnQ6aW5zdGFuY2VJRD0ieG1wLmlpZDpmYmMzMWNhOS01OWE4LTM5NDQtOTIzZC1mNmM1MDZlZWM5YmQiIHN0RXZ0OndoZW49IjIwMjMtMTAtMjNUMTA6NTY6MTMtMDc6MDAiIHN0RXZ0OnNvZnR3YXJlQWdlbnQ9IkFkb2JlIFBob3Rvc2hvcCBDQyAyMDE5IChXaW5kb3dzKSIgc3RFdnQ6Y2hhbmdlZD0iLyIvPiA8L3JkZjpTZXE+IDwveG1wTU06SGlzdG9yeT4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz7gdBy8AAAKMElEQVR42u2de4xVxR3HP7PL8lhYgQUWUcBXLRGNUVCM+MCKtmKC2vqIjYqaGI2N2qiJjVWbSGKbam3V1Kq1tVVRa1urjYqaqqhtFVt3QQFB5CkiLAvsLrDA7t5+887Mzp25u/dy7+7eM3P3/JJJ7r3nzMw58/3N7/d7zEytVsMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMMwDMM4ePl/Gu+Ql5M/UEIAAAAASUVORK5CYII=') no-repeat center center;
+            background-size: cover;
+            opacity: 0.7;
+        }
+        #mars { background: linear-gradient(45deg, #ff6b4c, #ff9d7d); }
+        #jupiter { 
+            background: linear-gradient(45deg, #e0ae6f, #f4d47a);
+            position: relative;
+        }
+        #jupiter::after {
+            content: '';
+            position: absolute;
+            width: 120%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            top: 50%;
+            left: -10%;
+            transform: translateY(-50%);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+        #saturn { 
+            background: linear-gradient(45deg, #f4d47a, #ffecb8);
+            position: relative;
+        }
+        #saturn::after {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 40px;
+            background: linear-gradient(transparent, rgba(255, 236, 184, 0.3), transparent);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-20deg);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(255, 236, 184, 0.5);
+        }
+        #uranus { background: linear-gradient(45deg, #b3ffff, #d1ffff); }
+        #neptune { background: linear-gradient(45deg, #4c4cff, #7d7dff); }
+
+        .orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.5s ease;
+        }
+
+        .planet-container:hover .orbit {
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .navigation {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1000;
+        }
+
+        .nav-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-dot.active {
+            background-color: #fff;
+            box-shadow: 0 0 10px #fff;
+        }
+
+        .title {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            font-family: 'Orbitron', sans-serif;
+            z-index: 1000;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .signature {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0.7;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            background-color: rgba(20, 20, 20, 0.9);
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal h2 {
+            font-family: 'Orbitron', sans-serif;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal p {
+            color: #ddd;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .modal-image {
+            width: 100%;
+            max-height: 300px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .planet:hover {
+            animation: pulse 1s infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="space" id="space"></div>
+    <div class="title">Spectacular Planetary Journey</div>
+    <div class="navigation" id="navigation"></div>
+    <div class="signature">Created with ❤️ by v0</div>
+    <div class="planet-container">
+        <div class="orbit" style="width: 400px; height: 400px;"></div>
+        <div id="mercury" class="planet">
+            <div class="planet-info">
+                <h2>Mercury</h2>
+                <p>The smallest planet, closest to the Sun. Its surface is heavily cratered and resembles Earth's Moon.</p>
+                <p class="fact">Fun fact: A year on Mercury is just 88 Earth days long!</p>
+            </div>
+        </div>
+    </div>
+    <div class="planet-container">
+        <div class="orbit" style="width: 500px; height: 500px;"></div>
+        <div id="venus" class="planet">
+            <div class="planet-info">
+                <h2>Venus</h2>
+                <p>Often called Earth's twin due to its similar size and mass. It has a thick atmosphere and is the hottest planet.</p>
+                <p class="fact">Fun fact: Venus rotates backwards compared to most planets!</p>
+            </div>
+        </div>
+    </div>
+    <div class="planet-container">
+        <div class="orbit" style="width: 600px; height: 600px;"></div>
+        <div id="earth" class="planet">
+            <div class="planet-info">
+                <h2>Earth</h2>
+                <p>Our home planet, the only known planet with life. It has a diverse ecosystem and is covered by 71% water.</p>
+                <p class="fact">Fun fact: Earth is the only planet not named after a god!</p>
+            </div>
+        </div>
+    </div>
+    <div class="planet-container">
+        <div class="orbit" style="width: 700px; height: 700px;"></div>
+        <div id="mars" class="planet">
+            <div class="planet-info">
+                <h2>Mars</h2>
+                <p>The Red Planet, named after the Roman god of war. It has the largest volcano and canyon in the solar system.</p>
+                <p class="fact">Fun fact: Mars has the tallest mountain in the solar system, Olympus Mons!</p>
+            </div>
+        </div>
+    </div>
+    <div class="planet-container">
+        <div class="orbit" style="width: 900px; height: 900px;"></div>
+        <div id="jupiter" class="planet">
+            <div class="planet-info">
+                <h2>Jupiter</h2>
+                <p>The largest planet in our solar system, a gas giant. Its Great Red Spot is a giant storm that has lasted for centuries.</p>
+                <p class="fact">Fun fact: Jupiter has at least 79 moons!</p>
+            </div>
+        </div>
+    </div>
+    <div class="planet-container">
+        <div class="orbit" style="width: 1100px; height: 1100px;"></div>
+        <div id="saturn" class="planet">
+            <div class="planet-info">
+                <h2>Saturn</h2>
+                <p>Known for its beautiful and extensive ring system. These rings are made mostly of ice particles with a smaller amount of rocky debris.</p>
+                <p class="fact">Fun fact: Saturn's density is so low that it would float in water!</p>
+            </div>
+        </div>
+    </div>
+    <div class="planet-container">
+        <div class="orbit" style="width: 1300px; height: 1300px;"></div>
+        <div id="uranus" class="planet">
+            <div class="planet-info">
+                <h2>Uranus</h2>
+                <p>An ice giant with a tilted axis of rotation, causing extreme seasons. It was the first planet discovered with the use of a telescope.</p>
+                <p class="fact">Fun fact: Uranus rotates on its side, like a rolling ball!</p>
+            </div>
+        </div>
+    </div>
+    <div class="planet-container">
+        <div class="orbit" style="width: 1500px; height: 1500px;"></div>
+        <div id="neptune" class="planet">
+            <div class="planet-info">
+                <h2>Neptune</h2>
+                <p>The windiest planet in our solar system, another ice giant. It was predicted by mathematics before it was discovered by telescope.</p>
+                <p class="fact">Fun fact: Neptune has supersonic winds, the fastest in the solar system!</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="planetModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <img id="modalImage" src="" alt="Planet Image" class="modal-image">
+            <p id="modalDescription"></p>
+        </div>
+    </div>
+
+    <script>
+        const planets = document.querySelectorAll('.planet');
+        const navigation = document.getElementById('navigation');
+        let currentPlanetIndex = -1;
+
+        function createStars() {
+            const space = document.getElementById('space');
+            for (let i = 0; i < 200; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                star.style.width = `${Math.random() * 3}px`;
+                star.style.height = star.style.width;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.animationDuration = `${Math.random() * 4 + 2}s`;
+                star.style.animationDelay = `${Math.random() * 4}s`;
+                space.appendChild(star);
+            }
+        }
+
+        function createShootingStars() {
+            const space = document.getElementById('space');
+            for (let i = 0; i < 5; i++) {
+                const shootingStar = document.createElement('div');
+                shootingStar.className = 'shooting-star';
+                shootingStar.style.left = `${Math.random() * 100}%`;
+                shootingStar.style.top = `${Math.random() * 100}%`;
+                shootingStar.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                shootingStar.style.animationDelay = `${Math.random() * 5}s`;
+                space.appendChild(shootingStar);
+            }
+        }
+
+        function createNavigation() {
+            planets.forEach((planet, index) => {
+                const dot = document.createElement('div');
+                dot.className = 'nav-dot';
+                dot.addEventListener('click', () => scrollToPlanet(index));
+                navigation.appendChild(dot);
+            });
+        }
+
+        function scrollToPlanet(index) {
+            const targetPosition = index * window.innerHeight;
+            window.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
+        }
+
+        function checkScroll() {
+            const scrollPosition = window.scrollY;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+
+            const scrollPercentage = scrollPosition / (documentHeight - windowHeight);
+            const activePlanetIndex = Math.floor(scrollPercentage * planets.length);
+
+            if (activePlanetIndex !== currentPlanetIndex) {
+                if (currentPlanetIndex >= 0) {
+                    planets[currentPlanetIndex].classList.remove('active');
+                    navigation.children[currentPlanetIndex].classList.remove('active');
+                }
+                if (activePlanetIndex >= 0 && activePlanetIndex < planets.length) {
+                    planets[activePlanetIndex].classList.add('active');
+                    navigation.children[activePlanetIndex].classList.add('active');
+                }
+                currentPlanetIndex = activePlanetIndex;
+            }
+
+            planets.forEach((planet, index) => {
+                const distance = Math.abs(index - scrollPercentage * planets.length);
+                const scale = Math.max(0.5, 1 - distance * 0.5);
+                const opacity = Math.max(0.3, 1 - distance * 0.7);
+                const zIndex = 1000 - Math.abs(index - currentPlanetIndex);
+                planet.style.transform = `translateZ(${-distance * 500}px) scale(${scale})`;
+                planet.style.opacity = opacity;
+                planet.style.zIndex = zIndex;
+            });
+        }
+
+        const modal = document.getElementById("planetModal");
+        const modalTitle = document.getElementById("modalTitle");
+        const modalImage = document.getElementById("modalImage");
+        const modalDescription = document.getElementById("modalDescription");
+        const closeBtn = document.getElementsByClassName("close")[0];
+
+        planets.forEach(planet => {
+            planet.addEventListener('click', () => {
+                const planetName = planet.id.charAt(0).toUpperCase() + planet.id.slice(1);
+                modalTitle.textContent = planetName;
+                modalImage.src = `/placeholder.svg?height=300&width=300`;
+                modalDescription.textContent = planet.querySelector('.planet-info p').textContent;
+                modal.style.display = "block";
+            });
+        });
+
+        closeBtn.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        window.addEventListener('load', function() {
+            createStars();
+            createShootingStars();
+            createNavigation();
+            checkScroll();
+            if (planets.length > 0) {
+                planets[0].classList.add('active');
+                navigation.children[0].classList.add('active');
+            }
+        });
+
+        window.addEventListener('scroll', checkScroll);
+
+        window.addEventListener('scroll', function() {
+            const space = document.querySelector('.space');
+            const yPos = -window.scrollY / 20;
+            space.style.transform = `translateY(${yPos}px)`;
+        });
+
+        let lastScrollTop = 0;
+        window.addEventListener('scroll', function() {
+            const st = window.pageYOffset || document.documentElement.scrollTop;
+            if (st > lastScrollTop) {
+                // Scrolling down
+                document.body.style.background = `linear-gradient(to bottom, #000000, #000033 ${st / 10}%)`;
+            } else {
+                // Scrolling up
+                document.body.style.background = `linear-gradient(to top, #000000, #000033 ${st / 10}%)`;
+            }
+            lastScrollTop = st <= 0 ? 0 : st;
+        }, false);
+    </script>
+</body>
+</html>
